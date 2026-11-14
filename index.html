@@ -432,7 +432,7 @@
 </div>
 
 <script src="data.js"></script>
-<script>window.__BUILD__ = "20261114184508";</script>
+<script>window.__BUILD__ = "20261114192739";</script>
 <script>
 (function(){
   const DATA  = window.MATERIALS || {items:[],categories:[]};
@@ -460,6 +460,15 @@
   function esc(s){
     return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
+  // 蝉妈妈素材库支持 ?keyword= 搜索：用标题能精确定位到这一条（实测返回 1 条）
+  function cmSearchUrl(it){
+    const base = 'https://cy.chanmama.com/case/aiMaterialSearch/';
+    const kw = (it.title || '').trim().slice(0, 40);
+    if(kw)     return base + '?keyword=' + encodeURIComponent(kw);
+    if(it.author) return base + '?keyword=' + encodeURIComponent(it.author);
+    return base;
+  }
+
   const ICON = {
     like:'<svg viewBox="0 0 24 24"><path d="M20.8 8.6a5 5 0 0 0-8.8-3 5 5 0 0 0-8.8 3c0 5 8.8 10.4 8.8 10.4s8.8-5.4 8.8-10.4z"/></svg>',
     cmt:'<svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8z"/></svg>',
@@ -650,7 +659,8 @@
       </div>
       <div class="acts">
         ${it.source_url ? `<a href="${esc(it.source_url)}" target="_blank" rel="noopener">抖音打开</a>` : ''}
-        <a href="https://cy.chanmama.com/" target="_blank" rel="noopener">素材拆解</a>
+        <a href="${cmSearchUrl(it)}" target="_blank" rel="noopener"
+           title="在蝉妈妈素材库里定位这条素材">素材拆解</a>
       </div>
       <div class="foot">数据快照：${esc(DATA.updated||'—')}　·　来源：蝉妈妈 · 创意 AI 素材库</div>
     `;
