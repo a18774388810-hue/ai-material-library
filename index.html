@@ -301,6 +301,22 @@
   .acts a:hover,.acts button:hover{border-color:rgba(254,44,85,.55);color:#fff;background:rgba(254,44,85,.14)}
   .info .foot{margin-top:16px;font-size:10.5px;color:var(--dim2);line-height:1.8}
 
+  /* ---------- 新版本提示条 ---------- */
+  #verBar{
+    position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:200;
+    display:flex;align-items:center;gap:12px;
+    padding:11px 13px 11px 18px;border-radius:12px;
+    background:linear-gradient(135deg,rgba(254,44,85,.97),rgba(255,90,120,.95));
+    box-shadow:0 10px 34px rgba(254,44,85,.42);
+    font-size:13px;color:#fff;white-space:nowrap;
+  }
+  #verBar button{
+    padding:5px 12px;border-radius:7px;border:none;cursor:pointer;
+    background:#fff;color:#c9183b;font-size:12.5px;font-weight:650;font-family:inherit;
+  }
+  #verBar i{font-style:normal;cursor:pointer;opacity:.72;font-size:16px;line-height:1;padding:0 2px}
+  #verBar i:hover{opacity:1}
+
   @media (max-width:1240px){
     .clubText span:last-child{display:none}
     .navTools .search{width:170px}
@@ -400,6 +416,7 @@
 </div>
 
 <script src="data.js"></script>
+<script>window.__BUILD__ = "20261114181315";</script>
 <script>
 (function(){
   const DATA  = window.MATERIALS || {items:[],categories:[]};
@@ -664,6 +681,32 @@
   render();
   syncSticky();
   window.addEventListener('resize', syncSticky);
+
+  /* ---------- 版本检测：绕过 GitHub Pages 10 分钟 HTML 缓存 ---------- */
+  (function checkVersion(){
+    const mine = window.__BUILD__ || '';
+    if(!mine || mine.indexOf('__BUILD') === 0) return;     // 本地 file:// 直开，跳过
+    setTimeout(async () => {
+      try{
+        const r = await fetch('version.json?_=' + Date.now(), {cache:'no-store'});
+        if(!r.ok) return;
+        const j = await r.json();
+        if(j.v && j.v !== mine) showBar();
+      }catch(e){}
+    }, 2000);
+
+    function showBar(){
+      if(document.getElementById('verBar')) return;
+      const b = document.createElement('div');
+      b.id = 'verBar';
+      b.innerHTML = '<span>素材库有新版本了</span><button>立即刷新</button><i>×</i>';
+      b.querySelector('button').onclick = () => {
+        location.replace(location.pathname + '?v=' + Date.now());
+      };
+      b.querySelector('i').onclick = () => b.remove();
+      document.body.appendChild(b);
+    }
+  })();
 
   // 滚动时高亮导航
   const io = new IntersectionObserver(entries => {
