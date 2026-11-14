@@ -345,11 +345,20 @@
     .closeBtn{right:0;top:-44px}
   }
   @media (max-width:640px){
-    .topbar{padding:12px 16px;gap:12px}
-    .qrImg{width:74px;height:74px}
-    .qrText b{font-size:14px}
-    .qrText span{font-size:12px}
-    .clubLogo{width:92px}
+    /* 手机上顶栏压成两行：品牌独占一行，二维码 + 俱乐部并排 */
+    .topbar{padding:10px 14px;gap:9px;flex-wrap:wrap}
+    .brand{width:100%}
+    .brand h1{font-size:14.5px}
+    .qrBox{position:static;transform:none;left:auto;flex:1;gap:9px;order:2;min-width:0}
+    .qrImg{width:56px;height:56px;padding:3px;border-radius:8px}
+    .qrText{gap:1px}
+    .qrText b{font-size:13px}
+    .qrText span{font-size:10.5px;line-height:1.3}
+    .clubBox{order:3;flex:none;gap:7px;margin-left:0}
+    .clubLogo{width:64px}
+    .clubText{gap:1px}
+    .clubText b{font-size:11.5px}
+    .clubText span{font-size:9.5px;line-height:1.3}
     .clubText span:last-child{display:none}
     .catnav{top:auto;position:static;flex-wrap:wrap;padding:10px 16px}
     .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
@@ -423,7 +432,7 @@
 </div>
 
 <script src="data.js"></script>
-<script>window.__BUILD__ = "20261114182908";</script>
+<script>window.__BUILD__ = "20261114184508";</script>
 <script>
 (function(){
   const DATA  = window.MATERIALS || {items:[],categories:[]};
