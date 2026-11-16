@@ -432,7 +432,7 @@
 </div>
 
 <script src="data.js"></script>
-<script>window.__BUILD__ = "20261116230244";</script>
+<script>window.__BUILD__ = "20261116232754";</script>
 <script>
 (function(){
   const DATA  = window.MATERIALS || {items:[],categories:[]};
@@ -761,6 +761,61 @@
   setTimeout(()=>{
     main.querySelectorAll('.catBlock').forEach(el => io.observe(el));
   }, 60);
+})();
+</script>
+
+<!-- 访问统计：PV / UV / 跳转蝉妈妈点击。配置见 assets/stats-config.js -->
+<script src="assets/stats-config.js"></script>
+<script>
+(function(){
+  var CFG = window.STATS_CONFIG || {};
+  if(!CFG.SUPABASE_URL || !CFG.SUPABASE_KEY) return;   // 未配置则静默跳过
+
+  var API = CFG.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/visits';
+  var HDR = {
+    'apikey': CFG.SUPABASE_KEY,
+    'Authorization': 'Bearer ' + CFG.SUPABASE_KEY,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=minimal'
+  };
+
+  // 访客标识：同一浏览器长期不变，清缓存才会换
+  function visitorId(){
+    var k = '_mk_vid', v = null;
+    try { v = localStorage.getItem(k); } catch(e){}
+    if(!v){
+      v = (self.crypto && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+      try { localStorage.setItem(k, v); } catch(e){}
+    }
+    return v;
+  }
+
+  function send(event, extra){
+    var row = {
+      vid:   visitorId(),
+      event: event,
+      path:  location.pathname + location.hash,
+      ref:   document.referrer || ''
+    };
+    if(extra) for(var k in extra) row[k] = extra[k];
+    try{
+      fetch(API, {method:'POST', headers:HDR, body:JSON.stringify([row]), keepalive:true})
+        .catch(function(){});
+    }catch(e){}
+  }
+
+  // PV：每次加载记一次
+  send('pv');
+
+  // 跳转蝉妈妈的点击（查看更多 / 素材拆解）—— 这是渠道转化的关键指标
+  document.addEventListener('click', function(e){
+    var a = e.target.closest ? e.target.closest('a') : null;
+    if(!a) return;
+    var href = a.getAttribute('href') || '';
+    if(href.indexOf('cy.chanmama.com') > -1) send('click_cm');
+  }, true);
 })();
 </script>
 </body>
