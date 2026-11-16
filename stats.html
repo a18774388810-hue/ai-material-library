@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>访问数据 · AI素材库</title>
+<style>
+  :root{
+    --bg:#0a0b0d; --panel:#12141a; --panel2:#171a21; --line:rgba(255,255,255,.075);
+    --text:#e9ebef; --dim:#8b9099; --dim2:#5f646d;
+    --red:#fe2c55; --cyan:#25f4ee;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(900px 500px at 15% -10%, rgba(254,44,85,.10), transparent 60%);
+    min-height:100vh;padding:32px 24px 56px;
+  }
+  .wrap{max-width:1120px;margin:0 auto}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:28px;flex-wrap:wrap}
+  header h1{font-size:22px;font-weight:600;letter-spacing:.3px}
+  header .badge{font-size:12px;color:var(--dim);border:1px solid var(--line);padding:4px 10px;border-radius:20px}
+  header .grow{flex:1}
+  button{
+    background:var(--panel2);color:var(--text);border:1px solid var(--line);
+    padding:9px 18px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;
+  }
+  button:hover{border-color:rgba(255,255,255,.28)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+  .kpi .k{font-size:12.5px;color:var(--dim);letter-spacing:.4px}
+  .kpi .v{font-size:38px;font-weight:600;margin-top:10px;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+  .kpi .u{font-size:12px;color:var(--dim2);margin-top:6px}
+  .kpi.hi .v{color:var(--red)}
+
+  .row2{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:14px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+  .panel h2{font-size:14px;font-weight:500;color:var(--dim);letter-spacing:.4px;margin-bottom:18px}
+
+  .mini{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+  .mini .kpi{padding:16px 18px}
+  .mini .v{font-size:28px}
+
+  .refs .r{display:flex;align-items:center;gap:12px;margin-bottom:13px;font-size:13px}
+  .refs .name{width:150px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}
+  .refs .track{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.06);overflow:hidden}
+  .refs .fill{height:100%;border-radius:4px;background:var(--red);display:block}
+  .refs .num{width:56px;text-align:right;color:var(--text);font-variant-numeric:tabular-nums;flex:none}
+
+  .empty{padding:44px 0;text-align:center;color:var(--dim2);font-size:13.5px;line-height:1.9}
+  .empty code{background:var(--panel2);padding:2px 7px;border-radius:5px;color:var(--cyan);font-size:12.5px}
+  .legend{display:flex;gap:20px;font-size:12px;color:var(--dim);margin-bottom:6px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  .err{background:rgba(254,44,85,.1);border:1px solid rgba(254,44,85,.3);color:#ff9db0;
+       padding:14px 18px;border-radius:10px;font-size:13px;margin-bottom:16px;line-height:1.7}
+  @media(max-width:860px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .row2{grid-template-columns:1fr}
+    .mini{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>访问数据</h1>
+    <span class="badge" id="stamp">读取中…</span>
+    <span class="grow"></span>
+    <button id="reload">刷新</button>
+  </header>
+
+  <div id="msg"></div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="k">总 PV</div><div class="v" id="tpv">—</div><div class="u">页面浏览总量</div></div>
+    <div class="kpi"><div class="k">总 UV</div><div class="v" id="tuv">—</div><div class="u">独立访客</div></div>
+    <div class="kpi"><div class="k">今日 PV</div><div class="v" id="dpv">—</div><div class="u">按北京时间</div></div>
+    <div class="kpi"><div class="k">今日 UV</div><div class="v" id="duv">—</div><div class="u">按北京时间</div></div>
+  </div>
+
+  <div class="mini">
+    <div class="kpi hi"><div class="k">跳转蝉妈妈次数</div><div class="v" id="cc">—</div><div class="u">查看更多 + 素材拆解</div></div>
+    <div class="kpi"><div class="k">点击人数</div><div class="v" id="cu">—</div><div class="u">去重访客</div></div>
+    <div class="kpi"><div class="k">点击转化率</div><div class="v" id="cr">—</div><div class="u">点击人数 ÷ 总 UV</div></div>
+  </div>
+
+  <div class="panel" style="margin-bottom:14px">
+    <h2>近 30 天趋势</h2>
+    <div class="legend">
+      <span><i style="background:#fe2c55"></i>PV</span>
+      <span><i style="background:#25f4ee"></i>UV</span>
+    </div>
+    <div id="chart"></div>
+  </div>
+
+  <div class="row2">
+    <div class="panel refs">
+      <h2>来源 TOP 8</h2>
+      <div id="refs"></div>
+    </div>
+    <div class="panel">
+      <h2>说明</h2>
+      <div style="font-size:13px;line-height:2;color:var(--dim)">
+        PV = 每次页面加载<br>
+        UV = 同一浏览器当天只算一次<br>
+        来源取 <code style="color:var(--cyan);font-size:12px">document.referrer</code> 的域名<br>
+        跳转统计的两个入口：「查看更多」「素材拆解」
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/stats-config.js"></script>
+<script>
+var CFG = window.STATS_CONFIG || {};
+var $ = function(id){ return document.getElementById(id); };
+
+function fmt(n){ return (n==null) ? '—' : Number(n).toLocaleString('zh-CN'); }
+
+function showMsg(html, isErr){
+  $('msg').innerHTML = html ? '<div class="err">'+html+'</div>' : '';
+}
+
+function drawChart(days){
+  var box = $('chart');
+  if(!days || !days.length){
+    box.innerHTML = '<div class="empty">还没有数据。</div>';
+    return;
+  }
+  var W = 1080, H = 300, L = 52, R = 16, T = 12, B = 34;
+  var iw = W - L - R, ih = H - T - B;
+  var max = 1;
+  days.forEach(function(d){ max = Math.max(max, d.pv, d.uv); });
+  max = Math.ceil(max * 1.12 / 4) * 4;    // 顶部留余量，且保证能被 4 整除 → Y 轴刻度是整数
+  var n = days.length;
+  var step = iw / n;
+  var bw = Math.max(4, Math.min(22, step * 0.46));
+
+  function y(v){ return T + ih - (v / max) * ih; }
+
+  var g = '';
+  // 网格 + Y 轴刻度
+  for(var i = 0; i <= 4; i++){
+    var v = max * i / 4, yy = y(v);
+    g += '<line x1="'+L+'" y1="'+yy+'" x2="'+(W-R)+'" y2="'+yy+'" stroke="rgba(255,255,255,.07)" stroke-width="1"/>';
+    g += '<text x="'+(L-10)+'" y="'+(yy+4)+'" text-anchor="end" font-size="11" fill="#5f646d">'+Math.round(v)+'</text>';
+  }
+  // PV 柱
+  days.forEach(function(d, idx){
+    var cx = L + step * idx + step / 2;
+    var h = (d.pv / max) * ih;
+    g += '<rect x="'+(cx-bw/2)+'" y="'+(T+ih-h)+'" width="'+bw+'" height="'+Math.max(h,1)+
+         '" rx="3" fill="rgba(254,44,85,.62)"><title>'+d.label+' PV '+d.pv+'</title></rect>';
+  });
+  // UV 折线
+  var pts = days.map(function(d, idx){
+    return (L + step*idx + step/2) + ',' + y(d.uv);
+  }).join(' ');
+  g += '<polyline points="'+pts+'" fill="none" stroke="#25f4ee" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>';
+  days.forEach(function(d, idx){
+    var cx = L + step*idx + step/2;
+    g += '<circle cx="'+cx+'" cy="'+y(d.uv)+'" r="3.2" fill="#0a0b0d" stroke="#25f4ee" stroke-width="2"><title>'+d.label+' UV '+d.uv+'</title></circle>';
+  });
+  // X 轴标签：最多 8 个
+  var every = Math.max(1, Math.ceil(n / 8));
+  days.forEach(function(d, idx){
+    if(idx % every !== 0) return;
+    var cx = L + step*idx + step/2;
+    g += '<text x="'+cx+'" y="'+(H-12)+'" text-anchor="middle" font-size="11" fill="#5f646d">'+d.label+'</text>';
+  });
+
+  box.innerHTML = '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block">'+g+'</svg>';
+}
+
+function drawRefs(refs){
+  var box = $('refs');
+  if(!refs || !refs.length){
+    box.innerHTML = '<div class="empty" style="padding:20px 0">暂无来源数据</div>';
+    return;
+  }
+  var max = Math.max.apply(null, refs.map(function(r){ return r.pv; })) || 1;
+  box.innerHTML = refs.map(function(r){
+    var w = Math.max(2, (r.pv / max) * 100);
+    return '<div class="r"><span class="name">'+r.src+'</span>'+
+           '<span class="track"><span class="fill" style="width:'+w+'%"></span></span>'+
+           '<span class="num">'+fmt(r.pv)+'</span></div>';
+  }).join('');
+}
+
+function render(d){
+  showMsg('');
+  $('tpv').textContent = fmt(d.total_pv);
+  $('tuv').textContent = fmt(d.total_uv);
+  $('dpv').textContent = fmt(d.today_pv);
+  $('duv').textContent = fmt(d.today_uv);
+  $('cc').textContent  = fmt(d.click_cm);
+  $('cu').textContent  = fmt(d.click_uv);
+  $('cr').textContent  = (d.total_uv > 0)
+      ? ((d.click_uv / d.total_uv) * 100).toFixed(1) + '%' : '—';
+  drawChart(d.days);
+  drawRefs(d.refs);
+  $('stamp').textContent = '更新于 ' + new Date().toLocaleTimeString('zh-CN', {hour12:false});
+}
+
+async function load(){
+  if(!CFG.SUPABASE_URL || !CFG.SUPABASE_KEY){
+    $('stamp').textContent = '未配置';
+    showMsg('还没有配置数据源。打开 <code>assets/stats-config.js</code>，把 Supabase 的 <b>Project URL</b> 和 <b>anon key</b> 填进 <code>SUPABASE_URL</code> / <code>SUPABASE_KEY</code> 两行，然后在 Supabase 的 SQL Editor 里执行 <code>scripts/supabase_schema.sql</code>。');
+    return;
+  }
+  showMsg('');
+  $('stamp').textContent = '读取中…';
+  try{
+    var r = await fetch(CFG.SUPABASE_URL.replace(/\/+$/,'') + '/rest/v1/rpc/stats_overview', {
+      method: 'POST',
+      headers: {
+        'apikey': CFG.SUPABASE_KEY,
+        'Authorization': 'Bearer ' + CFG.SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: '{}'
+    });
+    if(!r.ok){
+      var t = await r.text();
+      throw new Error('HTTP ' + r.status + ' · ' + t.slice(0, 300));
+    }
+    render(await r.json());
+  }catch(e){
+    $('stamp').textContent = '读取失败';
+    showMsg('拉取数据失败：' + e.message +
+      '<br><br>常见原因：表还没建（执行 supabase_schema.sql）、或 RPC 函数 <code>stats_overview</code> 没创建成功。');
+  }
+}
+
+$('reload').addEventListener('click', load);
+load();
+</script>
+</body>
+</html>
