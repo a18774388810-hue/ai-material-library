@@ -432,7 +432,7 @@
 </div>
 
 <script src="data.js"></script>
-<script>window.__BUILD__ = "20261116222102";</script>
+<script>window.__BUILD__ = "20261116230244";</script>
 <script>
 (function(){
   const DATA  = window.MATERIALS || {items:[],categories:[]};
@@ -464,18 +464,19 @@
      尹晨专属码，2026-11 由蝉妈妈对接人提供。
      格式是三个裸参数 ?BDPC&SCCY&2613044393366 —— 不是 key=value，
      服务端按位置解析，千万不要改写成 ?channel=xxx 之类。
-     任何跳转到 cy.chanmama.com 的链接都必须带上它，否则渠道归因丢失。 */
+     任何跳转到 cy.chanmama.com 的链接都必须带上它，否则渠道归因丢失。
+
+     重要：码是「路径无关参数」，但不会自动透传。
+     蝉妈妈页面内的链接不会带码（实测 17 个链接里 0 个带码），
+     所以站内每一处跳转都必须显式使用 CM_HOME。
+
+     「查看更多」与「素材拆解」统一用同一个落地页：素材库首页 + 码。
+     原先「素材拆解」是拼 ?keyword=素材标题 去精确定位那一条，已废弃：
+     素材标题是 40 字的营销话术（如"买一送一很划算，面料亲肤柔软舒适"），
+     塞进搜索框基本搜不出结果，用户点过去看到空页面就直接走了，
+     追踪码带了也白带。统一跳素材库首页，至少让人有东西可逛。 */
   const CM_TRACK = 'BDPC&SCCY&2613044393366';
   const CM_HOME  = 'https://cy.chanmama.com/case/aiMaterialSearch/?' + CM_TRACK;
-
-  // 蝉妈妈素材库支持 ?keyword= 搜索：用标题能精确定位到这一条（实测返回 1 条）
-  // 注意：keyword 必须追加在追踪码之后，实测服务端两者可同时解析
-  function cmSearchUrl(it){
-    const kw = (it.title || '').trim().slice(0, 40);
-    if(kw)        return CM_HOME + '&keyword=' + encodeURIComponent(kw);
-    if(it.author) return CM_HOME + '&keyword=' + encodeURIComponent(it.author);
-    return CM_HOME;
-  }
 
   const ICON = {
     like:'<svg viewBox="0 0 24 24"><path d="M20.8 8.6a5 5 0 0 0-8.8-3 5 5 0 0 0-8.8 3c0 5 8.8 10.4 8.8 10.4s8.8-5.4 8.8-10.4z"/></svg>',
@@ -667,8 +668,8 @@
       </div>
       <div class="acts">
         ${it.source_url ? `<a href="${esc(it.source_url)}" target="_blank" rel="noopener">抖音打开</a>` : ''}
-        <a href="${cmSearchUrl(it)}" target="_blank" rel="noopener"
-           title="在蝉妈妈素材库里定位这条素材">素材拆解</a>
+        <a href="${esc(CM_HOME)}" target="_blank" rel="noopener"
+           title="打开蝉妈妈 AI 素材库（含尹晨专属追踪码）">素材拆解</a>
       </div>
       <div class="foot">数据快照：${esc(DATA.updated||'—')}　·　来源：蝉妈妈 · 创意 AI 素材库</div>
     `;
