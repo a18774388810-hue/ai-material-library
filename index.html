@@ -432,7 +432,7 @@
 </div>
 
 <script src="data.js"></script>
-<script>window.__BUILD__ = "20261126113208";</script>
+<script>window.__BUILD__ = "20261127153446";</script>
 <script>
 (function(){
   const DATA  = window.MATERIALS || {items:[],categories:[]};
@@ -809,12 +809,20 @@
   // PV：每次加载记一次
   send('pv');
 
-  // 跳转蝉妈妈的点击（查看更多 / 素材拆解）—— 这是渠道转化的关键指标
+  // 跳转蝉妈妈的两个入口分开统计：类目标题上的「查看更多」/ 弹层里的「素材拆解」
   document.addEventListener('click', function(e){
     var a = e.target.closest ? e.target.closest('a') : null;
     if(!a) return;
     var href = a.getAttribute('href') || '';
-    if(href.indexOf('cy.chanmama.com') > -1) send('click_cm');
+    if(href.indexOf('cy.chanmama.com') < 0) return;
+
+    var ev = a.className.indexOf('moreLink') > -1 ? 'click_more' : 'click_split';
+    var cat = a.getAttribute('data-cat') || '';
+    if(!cat){
+      var sec = a.closest ? a.closest('.catBlock') : null;
+      if(sec) cat = sec.getAttribute('data-cat') || '';
+    }
+    send(ev, {cat: cat});
   }, true);
 })();
 </script>
