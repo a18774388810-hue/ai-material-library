@@ -259,7 +259,14 @@ function render(d){
 async function load(){
   if(!CFG.SUPABASE_URL || !CFG.SUPABASE_KEY){
     $('stamp').textContent = '未配置';
-    showMsg('还没有配置数据源。打开 <code>assets/stats-config.js</code>，把 Supabase 的 <b>Project URL</b> 和 <b>anon key</b> 填进 <code>SUPABASE_URL</code> / <code>SUPABASE_KEY</code> 两行，然后在 Supabase 的 SQL Editor 里执行 <code>scripts/supabase_schema.sql</code>。');
+    showMsg(
+      '<b>后台已经做好了，还差一个数据源就能开始统计。</b><br><br>' +
+      '① 打开 <a href="https://supabase.com" target="_blank" rel="noopener" style="color:#25f4ee">supabase.com</a>，用 GitHub 账号一键登录，新建一个免费项目（区域选 Singapore 最快）<br>' +
+      '② 进 <b>SQL Editor</b>，把本机 <code>scripts/supabase_schema.sql</code> 全文粘进去执行<br>' +
+      '③ 进 <b>Project Settings → API</b>，复制 <b>Project URL</b> 和 <b>anon public</b> 两个值<br>' +
+      '④ 把它们填进 <code>assets/stats-config.js</code> 的两行，重新发布一次<br><br>' +
+      '<b>注意</b>：统计数据从配置成功那一刻开始记，之前没有留存——这个站点之前从未接过数据源。'
+    );
     return;
   }
   showMsg('');
