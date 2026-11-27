@@ -41,6 +41,10 @@
   .panel h2{font-size:14px;font-weight:500;color:var(--dim);letter-spacing:.4px;margin-bottom:18px}
 
   .mini{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+  .mini.six{grid-template-columns:repeat(6,1fr)}
+  .mini.six .kpi{padding:15px 14px}
+  .mini.six .v{font-size:26px}
+  .mini.six .k{font-size:11.5px}
   .mini .kpi{padding:16px 18px}
   .mini .v{font-size:28px}
 
@@ -60,6 +64,7 @@
     .kpis{grid-template-columns:repeat(2,1fr)}
     .row2{grid-template-columns:1fr}
     .mini{grid-template-columns:1fr}
+    .mini.six{grid-template-columns:repeat(2,1fr)}
   }
 </style>
 </head>
@@ -81,9 +86,12 @@
     <div class="kpi"><div class="k">今日 UV</div><div class="v" id="duv">—</div><div class="u">按北京时间</div></div>
   </div>
 
-  <div class="mini">
-    <div class="kpi hi"><div class="k">跳转蝉妈妈次数</div><div class="v" id="cc">—</div><div class="u">查看更多 + 素材拆解</div></div>
-    <div class="kpi"><div class="k">点击人数</div><div class="v" id="cu">—</div><div class="u">去重访客</div></div>
+  <div class="mini six">
+    <div class="kpi hi"><div class="k">查看更多 · 累计人数</div><div class="v" id="m_all">—</div><div class="u">类目标题右侧按钮</div></div>
+    <div class="kpi hi"><div class="k">查看更多 · 今日</div><div class="v" id="m_today">—</div><div class="u">去重访客</div></div>
+    <div class="kpi hi"><div class="k">素材拆解 · 累计人数</div><div class="v" id="s_all">—</div><div class="u">弹层里的按钮</div></div>
+    <div class="kpi hi"><div class="k">素材拆解 · 今日</div><div class="v" id="s_today">—</div><div class="u">去重访客</div></div>
+    <div class="kpi"><div class="k">跳转蝉妈妈总人数</div><div class="v" id="cu">—</div><div class="u">两个入口去重</div></div>
     <div class="kpi"><div class="k">点击转化率</div><div class="v" id="cr">—</div><div class="u">点击人数 ÷ 总 UV</div></div>
   </div>
 
@@ -92,6 +100,8 @@
     <div class="legend">
       <span><i style="background:#fe2c55"></i>PV</span>
       <span><i style="background:#25f4ee"></i>UV</span>
+      <span><i style="background:#ffb020"></i>查看更多人数</span>
+      <span><i style="background:#7C6BFF"></i>素材拆解人数</span>
     </div>
     <div id="chart"></div>
   </div>
@@ -110,6 +120,10 @@
         跳转统计的两个入口：「查看更多」「素材拆解」
       </div>
     </div>
+  </div>
+  <div class="panel refs" style="margin-top:14px">
+    <h2>类目点击排行 · 近 30 天</h2>
+    <div id="cats"></div>
   </div>
 </div>
 
@@ -133,7 +147,7 @@ function drawChart(days){
   var W = 1080, H = 300, L = 52, R = 16, T = 12, B = 34;
   var iw = W - L - R, ih = H - T - B;
   var max = 1;
-  days.forEach(function(d){ max = Math.max(max, d.pv, d.uv); });
+  days.forEach(function(d){ max = Math.max(max, d.pv, d.uv, d.more || 0, d.split || 0); });
   max = Math.ceil(max * 1.12 / 4) * 4;    // 顶部留余量，且保证能被 4 整除 → Y 轴刻度是整数
   var n = days.length;
   var step = iw / n;
@@ -164,6 +178,23 @@ function drawChart(days){
     var cx = L + step*idx + step/2;
     g += '<circle cx="'+cx+'" cy="'+y(d.uv)+'" r="3.2" fill="#0a0b0d" stroke="#25f4ee" stroke-width="2"><title>'+d.label+' UV '+d.uv+'</title></circle>';
   });
+  // 查看更多 / 素材拆解 人数折线
+  [['more','#ffb020','查看更多'],['split','#7C6BFF','素材拆解']].forEach(function(cfg){
+    var key = cfg[0], color = cfg[1], name = cfg[2];
+    var has = days.some(function(d){ return (d[key]||0) > 0; });
+    if(!has) return;
+    var p = days.map(function(d, idx){
+      return (L + step*idx + step/2) + ',' + y(d[key] || 0);
+    }).join(' ');
+    g += '<polyline points="'+p+'" fill="none" stroke="'+color+'" stroke-width="1.8" stroke-dasharray="4 3" stroke-linejoin="round" opacity=".95"/>';
+    days.forEach(function(d, idx){
+      if((d[key]||0) > 0){
+        var cx = L + step*idx + step/2;
+        g += '<circle cx="'+cx+'" cy="'+y(d[key])+'" r="2.6" fill="#0a0b0d" stroke="'+color+'" stroke-width="1.8"><title>'+d.label+' '+name+' '+(d[key]||0)+' 人</title></circle>';
+      }
+    });
+  });
+
   // X 轴标签：最多 8 个
   var every = Math.max(1, Math.ceil(n / 8));
   days.forEach(function(d, idx){
@@ -190,18 +221,38 @@ function drawRefs(refs){
   }).join('');
 }
 
+function drawCats(cats){
+  var box = $('cats');
+  if(!box) return;
+  if(!cats || !cats.length){
+    box.innerHTML = '<div class="empty" style="padding:20px 0">还没有点击数据</div>';
+    return;
+  }
+  var max = Math.max.apply(null, cats.map(function(c){ return c.clicks; })) || 1;
+  box.innerHTML = cats.map(function(c){
+    var w = Math.max(2, (c.clicks / max) * 100);
+    return '<div class="r"><span class="name">'+c.cat+'</span>'+
+           '<span class="track"><span class="fill" style="width:'+w+'%"></span></span>'+
+           '<span class="num">'+fmt(c.clicks)+'</span></div>';
+  }).join('');
+}
+
 function render(d){
   showMsg('');
   $('tpv').textContent = fmt(d.total_pv);
   $('tuv').textContent = fmt(d.total_uv);
   $('dpv').textContent = fmt(d.today_pv);
   $('duv').textContent = fmt(d.today_uv);
-  $('cc').textContent  = fmt(d.click_cm);
-  $('cu').textContent  = fmt(d.click_uv);
+  $('m_all').textContent   = fmt(d.click_more_uv);
+  $('m_today').textContent = fmt(d.today_more);
+  $('s_all').textContent   = fmt(d.click_split_uv);
+  $('s_today').textContent = fmt(d.today_split);
+  $('cu').textContent      = fmt(d.click_uv);
   $('cr').textContent  = (d.total_uv > 0)
       ? ((d.click_uv / d.total_uv) * 100).toFixed(1) + '%' : '—';
   drawChart(d.days);
   drawRefs(d.refs);
+  drawCats(d.cats);
   $('stamp').textContent = '更新于 ' + new Date().toLocaleTimeString('zh-CN', {hour12:false});
 }
 
